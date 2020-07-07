@@ -1,0 +1,74 @@
+﻿<Window x:Class="OpcClient.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:OpcClient"
+        mc:Ignorable="d"
+        Title="MainWindow" Height="800" Width="1200">
+    <Grid>
+        <Label Content="Host" HorizontalAlignment="Left" Height="23" Margin="15,8,0,0" VerticalAlignment="Top" Width="35"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="55,12,0,0" TextWrapping="Wrap"
+            Text="localhost" VerticalAlignment="Top" Width="110"
+            x:Name="ServerText"/>
+        <Button Content="Browse" HorizontalAlignment="Left" Margin="170,12,0,0" VerticalAlignment="Top" Width="76" Click="Browse_Button_Click" />
+
+        <Label Content="OpcServerName" HorizontalAlignment="Left" Height="26" Margin="270,8,0,0"
+               VerticalContentAlignment="Top"
+               VerticalAlignment="Top" Width="104"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="370,12,0,0" TextWrapping="Wrap"
+            Text="" VerticalAlignment="Top" Width="160"
+            x:Name="ServerNameText"/>
+        <Button Content="Connect" HorizontalAlignment="Left" Margin="540,12,0,0" VerticalAlignment="Top" Width="76" Click="Connect_Button_Click" />
+        <Button Content="Export" HorizontalAlignment="Left" Margin="640,12,0,0" VerticalAlignment="Top" Width="76" Click="Export_Button_Click" />
+        <Button Content="Close" HorizontalAlignment="Left" Margin="800,12,0,0" VerticalAlignment="Top" Width="76" Click="Close_Button_Click" />
+
+        <WrapPanel Margin="20,40,0,0" >
+            <TextBlock HorizontalAlignment="Left" Height="23" VerticalAlignment="Top" x:Name="DateTimeText" Width="140">
+                <TextBlock.Text>
+                    <MultiBinding StringFormat="{}{0:0000}/{1:00}/{2:00} {3:00}:{4:00}:{5:00}:{6:000}">
+                        <Binding Path="iYear" />
+                        <Binding Path="iMonth" />
+                        <Binding Path="iDay" />
+                        <Binding Path="iHour" />
+                        <Binding Path="iMinute" />
+                        <Binding Path="iSecond" />
+                        <Binding Path="iMilisecond" />
+                    </MultiBinding>
+                </TextBlock.Text>
+            </TextBlock>
+            <Button Content="Start" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Width="76" Click="Start_Button_Click" />
+            <Button Content="Stop" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Width="76" Click="Stop_Button_Click" />
+            <TextBlock HorizontalAlignment="Right" Height="23" Width="80" VerticalAlignment="Top" Margin="25,0,0,0"  x:Name="CountText" Text="{Binding Value, StringFormat={}{0:00000000}}" />
+        </WrapPanel>
+
+        <ListView Margin="20,70,546,10" x:Name="ServerList"
+            ScrollViewer.VerticalScrollBarVisibility="Visible"
+                  MouseDoubleClick="ServerList_MouseDoubleClick"
+                  >
+        </ListView>
+        <ListView HorizontalAlignment="Left" Margin="270,70,10,10" Width="900"
+            x:Name="SonsorList"
+            ButtonBase.Click="TagListGridViewColumnHeaderClickedHandler"
+            ItemsSource="{Binding}" ScrollViewer.VerticalScrollBarVisibility="Visible" >
+            <ListView.Resources>
+                <Style TargetType="{x:Type GridViewColumnHeader}">
+                    <Setter Property="HorizontalContentAlignment" Value="Center" />
+                </Style>
+            </ListView.Resources>
+            <ListView.View>
+                <GridView>
+                    <GridViewColumn Header="Name" Width="380" DisplayMemberBinding="{Binding Name}" />
+                    <GridViewColumn Header="Type" Width="120" DisplayMemberBinding="{Binding DataType}" />
+                    <GridViewColumn Header="Value" Width="372" >
+                        <GridViewColumn.CellTemplate>
+                            <DataTemplate>
+                                <TextBlock Text="{Binding Value, StringFormat={}{0:0.00}}" TextAlignment="Right" Width="358"/>
+                            </DataTemplate>
+                        </GridViewColumn.CellTemplate>
+                    </GridViewColumn>
+                </GridView>
+            </ListView.View>
+        </ListView>
+    </Grid>
+</Window>

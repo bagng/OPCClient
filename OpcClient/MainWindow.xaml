@@ -17,11 +17,18 @@
                VerticalContentAlignment="Top"
                VerticalAlignment="Top" Width="104"/>
         <TextBox HorizontalAlignment="Left" Height="23" Margin="370,12,0,0" TextWrapping="Wrap"
-            Text="" VerticalAlignment="Top" Width="160"
+            VerticalAlignment="Top" Width="160"
             x:Name="ServerNameText"/>
-        <Button Content="Connect" HorizontalAlignment="Left" Margin="540,12,0,0" VerticalAlignment="Top" Width="76" Click="Connect_Button_Click" />
-        <Button Content="Export" HorizontalAlignment="Left" Margin="640,12,0,0" VerticalAlignment="Top" Width="76" Click="Export_Button_Click" />
-        <Button Content="Close" HorizontalAlignment="Left" Margin="800,12,0,0" VerticalAlignment="Top" Width="76" Click="Close_Button_Click" />
+        <Label Content="UpdateRate (ms)" HorizontalAlignment="Left" Height="26" Margin="540,8,0,0"
+               VerticalContentAlignment="Top"
+               VerticalAlignment="Top" Width="100"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="640,12,0,0" TextWrapping="Wrap"
+            VerticalAlignment="Top" Width="50"
+            x:Name="UpdateRateText" Text="{Binding Value}"/>
+
+        <Button Content="Connect" HorizontalAlignment="Left" Margin="720,12,0,0" VerticalAlignment="Top" Width="76" Click="Connect_Button_Click" />
+        <Button Content="Export" HorizontalAlignment="Left" Margin="820,12,0,0" VerticalAlignment="Top" Width="76" Click="Export_Button_Click" />
+        <Button Content="Close" HorizontalAlignment="Left" Margin="960,12,0,0" VerticalAlignment="Top" Width="76" Click="Close_Button_Click" />
 
         <WrapPanel Margin="20,40,0,0" >
             <TextBlock HorizontalAlignment="Left" Height="23" VerticalAlignment="Top" x:Name="DateTimeText" Width="140">

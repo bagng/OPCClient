@@ -27,24 +27,28 @@ namespace OpcClient
         // Define the group (subscriber) status, which is equivalent to the group parameter in the OPC specification
         private SubscriptionState mReadGroup = null;
 
-        SensorViewModel cSensorViewModel;
+        private SensorViewModel cSensorViewModel;
         private string[] MonitoringItemNames;
         private DateTimeViewModel cDateTime;
 
-        SensorData cCurrentCounter;
-        int iCurrentCount;
+        private SensorData cCurrentCounter;
+        private int iCurrentCount;
 
         private DispatcherTimer dataRateTimer;
+        private SensorData cUpdateRate;
 
         public MainWindow()
         {
             cSensorViewModel = new SensorViewModel();
             cDateTime = new DateTimeViewModel();
             cCurrentCounter = new SensorData();
+            cUpdateRate = new SensorData();
             InitializeComponent();
             SonsorList.DataContext = cSensorViewModel.ListSensorItem;
             DateTimeText.DataContext = cDateTime;
             CountText.DataContext = cCurrentCounter;
+            UpdateRateText.DataContext = cUpdateRate;
+            cUpdateRate.Value = "10";
             //LoadOPCNames();
 
             cDateTime.DateTimeCurrent = DateTime.Now;
@@ -60,7 +64,7 @@ namespace OpcClient
             // Query the server
             //Remote, TX1 is the computer name
             // Opc.Server[] servers = m_discovery.GetAvailableServers(Specification.COM_DA_20, "TX1", null);
-            Opc.Server[] servers = m_discovery.GetAvailableServers(Specification.COM_DA_20, ServerText.Text.ToString(), null);
+            Opc.Server[] servers = m_discovery.GetAvailableServers(Specification.COM_DA_30, ServerText.Text.ToString(), null);
 //            Opc.Server[] servers = m_discovery.GetAvailableServers(Specification.COM_DA_10, "DESKTOP-MONSTER", null);//Local
             // Indicates the data access specification version, Specification.COMDA_20 is equal to version 2.0.
             // host is the computer name, null means no network security certification is required.
@@ -159,7 +163,7 @@ namespace OpcClient
             mReadGroup.ServerHandle = null;                          // The handle assigned by the server to the group.
             mReadGroup.ClientHandle = Guid.NewGuid().ToString();     // The handle assigned by the client to the group.
             mReadGroup.Active = true;                                // Activate the group.
-            mReadGroup.UpdateRate = 10;                             // The refresh rate is 1 second. -> 1000
+            mReadGroup.UpdateRate = int.Parse(cUpdateRate.Value);    // The refresh rate is 1 second. -> 1000
             mReadGroup.Deadband = 0;                                 // When the dead zone value is set to 0, the server will notify the group of any data changes in the group.
             mReadGroup.Locale = null;                                //No regional values are set.
 

@@ -5,7 +5,7 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OpcClient"
         mc:Ignorable="d"
-        Title="MainWindow" Height="800" Width="1200">
+        Title="OPC Client by Realweb" Height="800" Width="1200">
     <Grid>
         <Label Content="Host" HorizontalAlignment="Left" Height="23" Margin="15,8,0,0" VerticalAlignment="Top" Width="35"/>
         <TextBox HorizontalAlignment="Left" Height="23" Margin="55,12,0,0" TextWrapping="Wrap"
@@ -44,7 +44,7 @@
                     </MultiBinding>
                 </TextBlock.Text>
             </TextBlock>
-            <Button Content="Start" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Width="76" Click="Start_Button_Click" />
+            <Button Content="Start" HorizontalAlignment="Left" Margin="120,0,0,0" VerticalAlignment="Top" Width="76" Click="Start_Button_Click" />
             <Button Content="Stop" HorizontalAlignment="Left" Margin="10,0,0,0" VerticalAlignment="Top" Width="76" Click="Stop_Button_Click" />
             <TextBlock HorizontalAlignment="Right" Height="23" Width="80" VerticalAlignment="Top" Margin="25,0,0,0"  x:Name="CountText" Text="{Binding Value, StringFormat={}{0:00000000}}" />
         </WrapPanel>
@@ -54,10 +54,10 @@
                   MouseDoubleClick="ServerList_MouseDoubleClick"
                   >
         </ListView>
-        <ListView HorizontalAlignment="Left" Margin="270,70,10,10" Width="900"
-            x:Name="SonsorList"
-            ButtonBase.Click="TagListGridViewColumnHeaderClickedHandler"
-            ItemsSource="{Binding}" ScrollViewer.VerticalScrollBarVisibility="Visible" >
+        <ListView HorizontalAlignment="Left" Margin="270,70,10,10" Width="900" x:Name="SonsorList"
+                  ButtonBase.Click="TagListGridViewColumnHeaderClickedHandler"
+                  ItemsSource="{Binding}" ScrollViewer.VerticalScrollBarVisibility="Visible"
+                  MouseDoubleClick="SonsorList_MouseDoubleClick" >
             <ListView.Resources>
                 <Style TargetType="{x:Type GridViewColumnHeader}">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />

@@ -7,7 +7,11 @@ using System.Collections.ObjectModel;
 using System.ComponentModel;
 using System.IO;
 using System.Windows;
+using System.Windows.Controls;
+using System.Windows.Data;
+using System.Windows.Documents;
 using System.Windows.Input;
+using System.Windows.Media;
 using System.Windows.Threading;
 
 namespace OpcClient
@@ -15,17 +19,16 @@ namespace OpcClient
     /// <summary>
     /// MainWindow.xaml에 대한 상호 작용 논리
     /// </summary>
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, IDisposable
     {
-
         private Opc.Da.Server m_server = null;
         // Define the enumeration based on the COM server interface, used to search all such servers.
-        private IDiscovery m_discovery = new OpcCom.ServerEnumerator();
+        private IDiscovery m_discovery;
 
         // Define group objects (subscribers)
         private Subscription mMonitoringSubscription = null;
         // Define the group (subscriber) status, which is equivalent to the group parameter in the OPC specification
-        private SubscriptionState mReadGroup = null;
+        private SubscriptionState mMonitoringGroup = null;
 
         private SensorViewModel cSensorViewModel;
         private string[] MonitoringItemNames;
@@ -39,6 +42,7 @@ namespace OpcClient
 
         public MainWindow()
         {
+            m_discovery = new OpcCom.ServerEnumerator();
             cSensorViewModel = new SensorViewModel();
             cDateTime = new DateTimeViewModel();
             cCurrentCounter = new SensorData();
@@ -61,6 +65,8 @@ namespace OpcClient
 
         private void Browse_Button_Click(object sender, RoutedEventArgs e)
         {
+            ServerList.Items.Clear();
+
             // Query the server
             //Remote, TX1 is the computer name
             // Opc.Server[] servers = m_discovery.GetAvailableServers(Specification.COM_DA_20, "TX1", null);
@@ -158,17 +164,17 @@ namespace OpcClient
 
             // Set group status
             // Group (subscriber) status, equivalent to the parameters of the group in the OPC specification
-            mReadGroup = new SubscriptionState();
-            mReadGroup.Name = "Monitoring";                       // Group Name
-            mReadGroup.ServerHandle = null;                          // The handle assigned by the server to the group.
-            mReadGroup.ClientHandle = Guid.NewGuid().ToString();     // The handle assigned by the client to the group.
-            mReadGroup.Active = true;                                // Activate the group.
-            mReadGroup.UpdateRate = int.Parse(cUpdateRate.Value);    // The refresh rate is 1 second. -> 1000
-            mReadGroup.Deadband = 0;                                 // When the dead zone value is set to 0, the server will notify the group of any data changes in the group.
-            mReadGroup.Locale = null;                                //No regional values are set.
+            mMonitoringGroup = new SubscriptionState();
+            mMonitoringGroup.Name = "Monitoring";                       // Group Name
+            mMonitoringGroup.ServerHandle = null;                          // The handle assigned by the server to the group.
+            mMonitoringGroup.ClientHandle = Guid.NewGuid().ToString();     // The handle assigned by the client to the group.
+            mMonitoringGroup.Active = true;                                // Activate the group.
+            mMonitoringGroup.UpdateRate = int.Parse(cUpdateRate.Value);    // The refresh rate is 1 second. -> 1000
+            mMonitoringGroup.Deadband = 0;                                 // When the dead zone value is set to 0, the server will notify the group of any data changes in the group.
+            mMonitoringGroup.Locale = null;                                //No regional values are set.
 
             // Add Group
-            mMonitoringSubscription = (Subscription)m_server.CreateSubscription(mReadGroup); // Create Group
+            mMonitoringSubscription = (Subscription)m_server.CreateSubscription(mMonitoringGroup); // Create Group
 
             // Define Item List
             Item[] items = new Item[MonitoringItemNames.Length];                             // Define the data item, ie item
@@ -192,7 +198,7 @@ namespace OpcClient
                 cSensorViewModel.AddType(titem.ItemName, titem.Value.GetType().ToString());
             }
             //Thread.Sleep(500); // sleep 500ms.
-            OnDataChange(mMonitoringSubscription, itemValues);
+            OnDataChange(mMonitoringSubscription, null, itemValues);
             // Register callback event
             mMonitoringSubscription.DataChanged += new DataChangedEventHandler(OnDataChange);
 
@@ -200,7 +206,7 @@ namespace OpcClient
         }
 
         // DataChange callback
-        public void OnDataChange(object subscriptionHandle, ItemValueResult[] values)
+        public void OnDataChange(object subscriptionHandle, object requestHandle, ItemValueResult[] values)
         {
             foreach (ItemValueResult item in values)
             {
@@ -210,9 +216,11 @@ namespace OpcClient
 
         private void Close_Button_Click(object sender, RoutedEventArgs e)
         {
-            cSensorViewModel.ListSensorItem.Clear();
+            dataRateTimer.Stop();
+
             if (mMonitoringSubscription != null)
             {
+                mMonitoringSubscription.DataChanged -= OnDataChange;
                 mMonitoringSubscription.RemoveItems(mMonitoringSubscription.Items);
                 m_server.CancelSubscription(mMonitoringSubscription);
                 mMonitoringSubscription.Dispose();
@@ -223,7 +231,33 @@ namespace OpcClient
                 m_server.Disconnect();
                 m_server = null;
             }
+            cSensorViewModel.ListSensorItem.Clear();
+
+            cSensorViewModel = null;
+            cDateTime = null;
+            cCurrentCounter = null;
+            cUpdateRate = null;
+
             this.Close();
+        }
+
+        private bool disposed;
+
+        public void Dispose()
+        {
+            this.Dispose(true);
+        }
+
+        protected virtual void Dispose(bool disposing)
+        {
+            if (this.disposed) return;
+            if (disposing)
+            {
+                // IDisposable 인터페이스를 구현하는 멤버들을 여기서 정리합니다.
+            }
+            // .NET Framework에 의하여 관리되지 않는 외부 리소스들을 여기서 정리합니다.
+            m_discovery.Dispose();
+            this.disposed = true;
         }
 
         private void Start_Button_Click(object sender, RoutedEventArgs e)
@@ -278,9 +312,118 @@ namespace OpcClient
             dataRateTimer.Stop();
         }
 
+        GridViewColumnHeader _lastHeaderClicked = null;
+        ListSortDirection _lastDirection = ListSortDirection.Ascending;
+        private SortAdorner listViewSortAdorner = null;
+
         private void TagListGridViewColumnHeaderClickedHandler(object sender, RoutedEventArgs e)
         {
+            GridViewColumnHeader headerClicked =
+                  e.OriginalSource as GridViewColumnHeader;
+            ListSortDirection direction;
 
+            if (headerClicked != null)
+            {
+                if (headerClicked.Role != GridViewColumnHeaderRole.Padding)
+                {
+                    if (listViewSortAdorner != null)
+                        AdornerLayer.GetAdornerLayer(headerClicked).Remove(listViewSortAdorner);
+                    if (headerClicked != _lastHeaderClicked)
+                    {
+                        direction = ListSortDirection.Ascending;
+                    }
+                    else
+                    {
+                        if (_lastDirection == ListSortDirection.Ascending)
+                        {
+                            direction = ListSortDirection.Descending;
+                        }
+                        else
+                        {
+                            direction = ListSortDirection.Ascending;
+                        }
+                    }
+                    listViewSortAdorner = new SortAdorner(headerClicked, direction);
+                    AdornerLayer.GetAdornerLayer(headerClicked).Add(listViewSortAdorner);
+
+                    string header = headerClicked.Column.Header as string;
+                    Sort(header, direction);
+                    /*
+                    if (direction == ListSortDirection.Ascending)
+                    {
+                        if(headerClicked.Column.Header.ToString().LastIndexOf(" ") == -1)
+                        headerClicked.Column.Header = header + " △";
+                    }
+                    else
+                    {
+                        if (headerClicked.Column.Header.ToString().LastIndexOf(" ") == -1)
+                            headerClicked.Column.Header = header + " ▽";
+
+                    }*/
+                    // Remove arrow from previously sorted header
+                    if (_lastHeaderClicked != null && _lastHeaderClicked != headerClicked)
+                    {
+                        _lastHeaderClicked.Column.HeaderTemplate = null;
+                    }
+                    _lastHeaderClicked = headerClicked;
+                    _lastDirection = direction;
+                }
+            }
+        }
+
+        /// <summary>
+        /// 정렬하기
+        /// </summary>
+        /// <param name="header">헤더</param>
+        /// <param name="listSortDirection">리스트 정렬 방향</param>
+        private void Sort(string sortBy, ListSortDirection direction)
+        {
+            ICollectionView dataView =
+              CollectionViewSource.GetDefaultView(SonsorList.ItemsSource);
+
+            dataView.SortDescriptions.Clear();
+            SortDescription sd = new SortDescription("Name", direction);
+            dataView.SortDescriptions.Add(sd);
+            dataView.Refresh();
+        }
+
+        public class SortAdorner : Adorner
+        {
+            private static Geometry ascGeometry =
+                Geometry.Parse("M 0 4 L 3.5 0 L 7 4 Z");
+
+            private static Geometry descGeometry =
+                Geometry.Parse("M 0 0 L 3.5 4 L 7 0 Z");
+
+            public ListSortDirection Direction { get; private set; }
+
+            public SortAdorner(UIElement element, ListSortDirection dir)
+                : base(element)
+            {
+                this.Direction = dir;
+            }
+
+            protected override void OnRender(DrawingContext drawingContext)
+            {
+                base.OnRender(drawingContext);
+
+                if (AdornedElement.RenderSize.Width < 20)
+                    return;
+
+                TranslateTransform transform = new TranslateTransform
+                    (
+                        AdornedElement.RenderSize.Width - 15,
+                        (AdornedElement.RenderSize.Height - 5) / 2
+                    );
+                drawingContext.PushTransform(transform);
+
+                Geometry geometry = ascGeometry;
+                if (this.Direction == ListSortDirection.Descending)
+                    geometry = descGeometry;
+                drawingContext.DrawGeometry(Brushes.Black, null, geometry);
+
+                drawingContext.Pop();
+            }
         }
 
         private void ServerList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
@@ -312,6 +455,26 @@ namespace OpcClient
             csv.NextRecord();
             fileWriter.Close();
         }
+
+        private void SonsorList_MouseDoubleClick(object sender, MouseButtonEventArgs e)
+        {
+            ListView tList = sender as ListView;
+            SensorData tItem = tList.SelectedItem as SensorData;
+            EditDialog cDlg = new EditDialog(tItem, UpdateOPCData);
+            cDlg.ShowDialog();
+            cDlg = null;
+        }
+
+
+        public void UpdateOPCData(SensorData tItem)
+        {
+            Item OPC_WriteItem = Array.Find(mMonitoringSubscription.Items, x => x.ItemName.Equals(tItem.Name));
+            ItemValue[] writeValues = new ItemValue[1];
+            writeValues[0] = new ItemValue(OPC_WriteItem);
+            writeValues[0].Value = tItem.Value;
+            IdentifiedResult[] retValues = mMonitoringSubscription.Write(writeValues);
+        }
+
     }
 
     public class DateTimeViewModel : INotifyPropertyChanged
@@ -323,6 +486,7 @@ namespace OpcClient
             set
             {
                 _iYear = value;
+                _DateTimeCurrent = new DateTime(_iYear, _DateTimeCurrent.Month, _DateTimeCurrent.Day);
                 OnPropertyChanged();
             }
         }
@@ -334,6 +498,7 @@ namespace OpcClient
             set
             {
                 _iMonth = value;
+                _DateTimeCurrent = new DateTime(_DateTimeCurrent.Year, _iMonth, _DateTimeCurrent.Day);
                 OnPropertyChanged();
             }
         }
@@ -345,6 +510,7 @@ namespace OpcClient
             set
             {
                 _iDay = value;
+                _DateTimeCurrent = new DateTime(_DateTimeCurrent.Year, _DateTimeCurrent.Month, _iDay);
                 OnPropertyChanged();
             }
         }
@@ -356,6 +522,7 @@ namespace OpcClient
             set
             {
                 _iHour = value;
+                _DateTimeCurrent = new DateTime(_DateTimeCurrent.Year, _DateTimeCurrent.Month, _DateTimeCurrent.Day, _iHour, _DateTimeCurrent.Minute, _DateTimeCurrent.Second, _DateTimeCurrent.Millisecond);
                 OnPropertyChanged();
             }
         }
@@ -367,6 +534,7 @@ namespace OpcClient
             set
             {
                 _iMinute = value;
+                _DateTimeCurrent = new DateTime(_DateTimeCurrent.Year, _DateTimeCurrent.Month, _DateTimeCurrent.Day, _DateTimeCurrent.Hour, _iMinute, _DateTimeCurrent.Second, _DateTimeCurrent.Millisecond);
                 OnPropertyChanged();
             }
         }
@@ -378,6 +546,7 @@ namespace OpcClient
             set
             {
                 _iSecond = value;
+                _DateTimeCurrent = new DateTime(_DateTimeCurrent.Year, _DateTimeCurrent.Month, _DateTimeCurrent.Day, _DateTimeCurrent.Hour, _DateTimeCurrent.Minute, _iSecond, _DateTimeCurrent.Millisecond);
                 OnPropertyChanged();
             }
         }
@@ -389,6 +558,7 @@ namespace OpcClient
             set
             {
                 _iMilisecond = value;
+                _DateTimeCurrent = new DateTime(_DateTimeCurrent.Year, _DateTimeCurrent.Month, _DateTimeCurrent.Day, _DateTimeCurrent.Hour, _DateTimeCurrent.Minute, _DateTimeCurrent.Second, _iMilisecond);
                 OnPropertyChanged();
             }
         }
@@ -400,13 +570,13 @@ namespace OpcClient
             set
             {
                 _DateTimeCurrent = value;
-                iYear = _DateTimeCurrent.Year;
-                iMonth = _DateTimeCurrent.Month;
-                iDay = _DateTimeCurrent.Day;
-                iHour = _DateTimeCurrent.Hour;
-                iMinute = _DateTimeCurrent.Minute;
-                iSecond = _DateTimeCurrent.Second;
-                iMilisecond = _DateTimeCurrent.Millisecond;
+                _iYear = _DateTimeCurrent.Year;
+                _iMonth = _DateTimeCurrent.Month;
+                _iDay = _DateTimeCurrent.Day;
+                _iHour = _DateTimeCurrent.Hour;
+                _iMinute = _DateTimeCurrent.Minute;
+                _iSecond = _DateTimeCurrent.Second;
+                _iMilisecond = _DateTimeCurrent.Millisecond;
                 OnPropertyChanged();
             }
         }

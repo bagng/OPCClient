@@ -5,32 +5,36 @@
         xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
         xmlns:local="clr-namespace:OpcClient"
         mc:Ignorable="d"
-        Title="OPC Client by Realweb" Height="800" Width="1200">
+        Title="OPC Client" Height="800" Width="1200">
     <Grid>
+        <Grid.ColumnDefinitions>
+            <ColumnDefinition Width="29*"/>
+            <ColumnDefinition Width="269*"/>
+        </Grid.ColumnDefinitions>
         <Label Content="Host" HorizontalAlignment="Left" Height="23" Margin="15,8,0,0" VerticalAlignment="Top" Width="35"/>
         <TextBox HorizontalAlignment="Left" Height="23" Margin="55,12,0,0" TextWrapping="Wrap"
             Text="localhost" VerticalAlignment="Top" Width="110"
-            x:Name="ServerText"/>
-        <Button Content="Browse" HorizontalAlignment="Left" Margin="170,12,0,0" VerticalAlignment="Top" Width="76" Click="Browse_Button_Click" />
+            x:Name="ServerText" Grid.ColumnSpan="2"/>
+        <Button Content="Browse" HorizontalAlignment="Left" Margin="54,12,0,0" VerticalAlignment="Top" Width="76" Click="Browse_Button_Click" Grid.Column="1" />
 
-        <Label Content="OpcServerName" HorizontalAlignment="Left" Height="26" Margin="270,8,0,0"
+        <Label Content="OpcServerName" HorizontalAlignment="Left" Height="26" Margin="154,8,0,0"
                VerticalContentAlignment="Top"
-               VerticalAlignment="Top" Width="104"/>
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="370,12,0,0" TextWrapping="Wrap"
+               VerticalAlignment="Top" Width="104" Grid.Column="1"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="254,12,0,0" TextWrapping="Wrap"
             VerticalAlignment="Top" Width="160"
-            x:Name="ServerNameText"/>
-        <Label Content="UpdateRate (ms)" HorizontalAlignment="Left" Height="26" Margin="540,8,0,0"
+            x:Name="ServerNameText" Grid.Column="1"/>
+        <Label Content="UpdateRate (ms)" HorizontalAlignment="Left" Height="26" Margin="424,8,0,0"
                VerticalContentAlignment="Top"
-               VerticalAlignment="Top" Width="100"/>
-        <TextBox HorizontalAlignment="Left" Height="23" Margin="640,12,0,0" TextWrapping="Wrap"
+               VerticalAlignment="Top" Width="100" Grid.Column="1"/>
+        <TextBox HorizontalAlignment="Left" Height="23" Margin="524,12,0,0" TextWrapping="Wrap"
             VerticalAlignment="Top" Width="50"
-            x:Name="UpdateRateText" Text="{Binding Value}"/>
+            x:Name="UpdateRateText" Text="{Binding Value}" Grid.Column="1"/>
 
-        <Button Content="Connect" HorizontalAlignment="Left" Margin="720,12,0,0" VerticalAlignment="Top" Width="76" Click="Connect_Button_Click" />
-        <Button Content="Export" HorizontalAlignment="Left" Margin="820,12,0,0" VerticalAlignment="Top" Width="76" Click="Export_Button_Click" />
-        <Button Content="Close" HorizontalAlignment="Left" Margin="960,12,0,0" VerticalAlignment="Top" Width="76" Click="Close_Button_Click" />
+        <Button Content="Connect" HorizontalAlignment="Left" Margin="604,12,0,0" VerticalAlignment="Top" Width="76" Click="Connect_Button_Click" Grid.Column="1" />
+        <Button Content="Export" HorizontalAlignment="Left" Margin="704,12,0,0" VerticalAlignment="Top" Width="76" Click="Export_Button_Click" Grid.Column="1" />
+        <Button Content="Close" HorizontalAlignment="Left" Margin="844,12,0,0" VerticalAlignment="Top" Width="76" Click="Close_Button_Click" Grid.Column="1" />
 
-        <WrapPanel Margin="20,40,0,0" >
+        <WrapPanel Margin="20,40,0,0" Grid.ColumnSpan="2" >
             <TextBlock HorizontalAlignment="Left" Height="23" VerticalAlignment="Top" x:Name="DateTimeText" Width="140">
                 <TextBlock.Text>
                     <MultiBinding StringFormat="{}{0:0000}/{1:00}/{2:00} {3:00}:{4:00}:{5:00}:{6:000}">
@@ -51,13 +55,13 @@
 
         <ListView Margin="20,70,546,10" x:Name="ServerList"
             ScrollViewer.VerticalScrollBarVisibility="Visible"
-                  MouseDoubleClick="ServerList_MouseDoubleClick"
+                  MouseDoubleClick="ServerList_MouseDoubleClick" Grid.ColumnSpan="2"
                   >
         </ListView>
-        <ListView HorizontalAlignment="Left" Margin="270,70,10,10" Width="900" x:Name="SonsorList"
+        <ListView HorizontalAlignment="Left" Margin="154,70,0,10" Width="900" x:Name="SonsorList"
                   ButtonBase.Click="TagListGridViewColumnHeaderClickedHandler"
                   ItemsSource="{Binding}" ScrollViewer.VerticalScrollBarVisibility="Visible"
-                  MouseDoubleClick="SonsorList_MouseDoubleClick" >
+                  MouseDoubleClick="SonsorList_MouseDoubleClick" Grid.Column="1" >
             <ListView.Resources>
                 <Style TargetType="{x:Type GridViewColumnHeader}">
                     <Setter Property="HorizontalContentAlignment" Value="Center" />
